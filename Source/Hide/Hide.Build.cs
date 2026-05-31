@@ -14,9 +14,8 @@ public class Hide : ModuleRules
 			"CoreUObject",
 			"Engine", 
 			"InputCore",
-			"EnhancedInput" ,
-			"GameplayTags",
-			"EnhancedInput"});
+			"EnhancedInput",
+			"GameplayTags"});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 
