@@ -15,5 +15,7 @@ public:
     // Sets default values for this character's properties
     ABaseCharacter();
 
-
+public:
+    // Called when the game starts or when spawned
+    
 };
