@@ -22,8 +22,9 @@ protected:
 
     UPROPERTY(VisibleAnywhere, Category = "Components")
     USphereComponent* ActorCollision;
+
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite,Category = "Components")
-    UStaticMeshComponent* MeshComponent;
+    UStaticMeshComponent* MeshComponent; 
 
 
 

@@ -20,6 +20,9 @@ AInteractionActorBase::AInteractionActorBase()
 	ActorCollision->SetSphereRadius(100.f);
 	MeshComponent->SetRelativeLocation(FVector::ZeroVector);
 	
+	MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	MeshComponent->SetCollisionObjectType(ECC_WorldDynamic);
+	MeshComponent->SetCollisionResponseToAllChannels(ECR_Overlap);
 }
 
 // Called when the game starts or when spawned

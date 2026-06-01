@@ -4,23 +4,27 @@
 
 #include "CoreMinimal.h"
 #include "Interaction/InteractionActorBase.h"
+#include "ItemStruct.h"
 #include "InteractionActor_PickUp.generated.h"
 
 class USphereComponent;
-/**
- * 
- */
+class APlayerCharacter;
+
 UCLASS()
 class HIDE_API AInteractionActor_PickUp : public AInteractionActorBase
 {
 	GENERATED_BODY()
-	
+
 protected:
 	virtual void BeginPlay() override;
 
 public:
 	AInteractionActor_PickUp();
 
+	void OnInteract(APlayerCharacter* InteractingCharacter);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+	FItemData ItemData;
 
 
 };
