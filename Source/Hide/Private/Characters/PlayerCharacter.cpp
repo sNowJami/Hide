@@ -4,13 +4,11 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Interaction/PickUp/InteractionActor_PickUp.h"
+
 
 APlayerCharacter::APlayerCharacter()
 {
-	CollisionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionSphere"));
-	RootComponent = CollisionSphere;
-	CollisionSphere->SetSphereRadius(200.f);
-
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
 	MeshComponent->SetupAttachment(RootComponent);
 }

@@ -10,11 +10,6 @@ void AInteractionActor_PickUp::BeginPlay()
 
 AInteractionActor_PickUp::AInteractionActor_PickUp()
 {
-	// 开启碰撞
-	MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-
-	// 可以被射线检测到
-	MeshComponent->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 }
 
 void AInteractionActor_PickUp::OnInteract(APlayerCharacter* InteractingCharacter)

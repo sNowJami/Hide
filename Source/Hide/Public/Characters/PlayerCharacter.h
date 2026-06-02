@@ -18,13 +18,12 @@ class HIDE_API APlayerCharacter : public ABaseCharacter
 public:
 	APlayerCharacter();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	USphereComponent* CollisionSphere;
+	
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	UStaticMeshComponent* MeshComponent;
 
-
+	UFUNCTION(BlueprintCallable)
 	void AddItemToInventory(const FItemData& NewItem);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Inventory")
