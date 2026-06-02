@@ -13,29 +13,32 @@ enum class EItemType : uint8
 USTRUCT(BlueprintType)
 struct FItemData
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	FName ItemID;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data")
+    int32 ItemID = 0;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	FString ItemName;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data")
+    FString ItemName = TEXT("新物品");
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	EItemType ItemType;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data")
+    FString Description = TEXT("这里是物品介绍...");
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	int32 Quantity;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data")
+    int32 CurrentCount = 1;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	UStaticMesh* ItemMesh;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data")
+    int32 MaxStackCount = 99;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	UTexture2D* ItemIcon;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data")
+    bool bCanStack = true;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	bool bCanStack = true;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data")
+    UTexture2D* ItemIcon = nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	int32 MaxStack = 5;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data")
+    UStaticMesh* ItemMesh = nullptr;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data")
+    EItemType ItemType;
 };

@@ -23,11 +23,7 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	UStaticMeshComponent* MeshComponent;
 
-	UFUNCTION(BlueprintCallable)
-	void AddItemToInventory(const FItemData& NewItem);
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Inventory")
-	TArray<FItemData> Inventory;
 
 
 

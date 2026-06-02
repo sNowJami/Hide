@@ -13,31 +13,6 @@ APlayerCharacter::APlayerCharacter()
 	MeshComponent->SetupAttachment(RootComponent);
 }
 
-void APlayerCharacter::AddItemToInventory(const FItemData& NewItem)
-{
-    // 如果物品允许堆叠
-    if (NewItem.bCanStack)
-    {
-        // 遍历背包
-        for (FItemData& Item : Inventory)
-        {
-            // 找相同ID
-            if (Item.ItemID == NewItem.ItemID)
-            {
-                // 增加数量
-                Item.Quantity += NewItem.Quantity;
-
-                UE_LOG(LogTemp, Warning, TEXT("物品堆叠成功"));
-
-                return;
-            }
-        }
-    }
-    // 没找到相同物品
-    Inventory.Add(NewItem);
-
-    UE_LOG(LogTemp, Warning, TEXT("新增物品"));
-}
 
 
 

@@ -12,11 +12,3 @@ AInteractionActor_PickUp::AInteractionActor_PickUp()
 {
 }
 
-void AInteractionActor_PickUp::OnInteract(APlayerCharacter* InteractingCharacter)
-{
-	if (!InteractingCharacter) return;
-
-	InteractingCharacter->AddItemToInventory(ItemData);
-
-	Destroy();
-}

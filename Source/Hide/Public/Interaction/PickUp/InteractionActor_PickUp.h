@@ -21,9 +21,9 @@ protected:
 public:
 	AInteractionActor_PickUp();
 
-	UFUNCTION(BlueprintCallable)
-	void OnInteract(APlayerCharacter* InteractingCharacter);
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	FItemData ItemData;
+	UFUNCTION(BlueprintCallable, Category = "Item")
+	FItemData GetItemData() const { return ItemData; }
 };
