@@ -4,15 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Characters/BaseCharacter.h"
+#include "ItemStruct.h"
 #include "PlayerCharacter.generated.h"
 
-// 前向声明
 class USphereComponent;
 class UStaticMeshComponent;
 
-/**
- *
- */
 UCLASS()
 class HIDE_API APlayerCharacter : public ABaseCharacter
 {
@@ -21,11 +18,14 @@ class HIDE_API APlayerCharacter : public ABaseCharacter
 public:
 	APlayerCharacter();
 
-	UPROPERTY(VisibleAnywhere,BlueprintReadWrite,Category = "Components")
-	USphereComponent* CollisionSphere;
+	
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	UStaticMeshComponent* MeshComponent;
+
+
+
+
 
 protected:
 	virtual void BeginPlay() override;
