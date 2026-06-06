@@ -8,13 +8,15 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerController.h"
 #include "Curves/CurveVector.h"
+// 【核心修复：补上运动组件头文件，消灭 GetCharacterMovement 红线】
+#include "GameFramework/CharacterMovementComponent.h"
 
 
 // Sets default values
 ADoor::ADoor()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+    // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+    PrimaryActorTick.bCanEverTick = true;
 
 
     // 初始化组件
@@ -37,9 +39,9 @@ ADoor::ADoor()
 // Called when the game starts or when spawned
 void ADoor::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
 
-    
+
     // 配置自动化 Timeline
     if (OpenCurve)
     {
@@ -51,6 +53,7 @@ void ADoor::BeginPlay()
         FinishedFunction.BindUFunction(this, FName("OnTimelineFinished"));
         AutoCompleteTimeline.SetTimelineFinishedFunc(FinishedFunction);
     }
+
 }
 
 // Called every frame
@@ -83,6 +86,7 @@ void ADoor::TryInteract(APlayerController* PC)
     }
 
     CurrentState = EDoorState::Pushing;
+
     bHasEventTriggered = false;
     bIsEventActive = false;
     CurrentProgress = 0.0f;
@@ -93,13 +97,19 @@ void ADoor::TryInteract(APlayerController* PC)
     ACharacter* PlayerChar = Cast<ACharacter>(CachedPC->GetPawn());
     if (PlayerChar)
     {
-        // 彻底无视键盘移动输入和鼠标视角输入
+        // 1. 强行清空角色的速度（瞬间刹车），防止脚步声和惯性动画被卡住
+        PlayerChar->GetCharacterMovement()->Velocity = FVector::ZeroVector;
+
+        // 2. 强行停止所有移动组件的正在进行的加速度计算
+        PlayerChar->GetCharacterMovement()->StopMovementImmediately();
+
+        // 3. 【安全清空】在这两步做完、速度彻底归零之后，再切断玩家输入
         PlayerChar->DisableInput(CachedPC);
     }
     // 让门本身开始允许接收输入（这样门才能在玩家断开后，单独接收 W/S 键）
     this->EnableInput(CachedPC);
 
- 
+
     // 锁定玩家常规输入并平滑切视角
     CachedPC->DisableInput(CachedPC);
     CachedPC->SetViewTargetWithBlend(this, 0.5f, EViewTargetBlendFunction::VTBlend_Cubic);
@@ -107,34 +117,58 @@ void ADoor::TryInteract(APlayerController* PC)
 
 void ADoor::PushDoor(float AxisValue)
 {
-    // 如果处于活跃事件（正在播惊吓动画），绝对不理会输入
+    // 1. 如果处于活跃事件（正在播惊吓动画），绝对不理会任何输入（包括S键）
     if (bIsEventActive) return;
 
-    // 容错：如果事件刚播完，状态还没来得及变回来，这里自动帮它变回来
+    // 2. 容错：如果事件刚播完，状态还没变回来，自动帮它变回来
     if (CurrentState == EDoorState::EventTriggered && !bIsEventActive)
     {
         CurrentState = EDoorState::Pushing;
     }
 
-    // 正常推门拦截
-    if (CurrentState != EDoorState::Pushing || AxisValue <= 0.0f) return;
+    // 3. 【核心回归】处理玩家按 S 键（AxisValue 为负数）想要退出的情况
+    if (AxisValue < 0.0f)
+    {
+        // 只有在当前状态是 Pushing，且门【完全没有被推动过】的时候，才允许按 S 退出
+        if (CurrentState == EDoorState::Pushing && CurrentProgress <= 0.0f)
+        {
+            UE_LOG(LogTemp, Log, TEXT("Door: Player pressed S without pushing. Exiting interaction."));
 
+            // 调用退出交互函数（把视角和控制权还给玩家，重置状态）
+            ExitInteraction();
+        }
+        return; // 按 S 键时不需要往下走“推进门”的累加逻辑了，直接返回
+    }
+
+    // 4. 正常推门拦截（如果不是 Pushing 状态，或者没有往前推 W，就不处理）
+    if (CurrentState != EDoorState::Pushing || AxisValue == 0.0f) return;
+
+    // 5. 累加推进进度
     float DeltaTime = GetWorld()->GetDeltaSeconds();
-    CurrentProgress += DeltaTime * PushSpeed * AxisValue;
+
+    // 【防瞬移核心保护】
+    // 如果 DeltaTime 异常大（比如切视角导致首帧掉帧卡顿），强行把它锁在 0.03 秒以内
+    if (DeltaTime > 0.05f) DeltaTime = 0.016f;
+
+    // 计算这一帧的真实增量（清理掉重复写两次导致的暴增）
+    float ProgressIncrement = DeltaTime * PushSpeed * AxisValue;
+
+    // 累加进度
+    CurrentProgress += ProgressIncrement;
 
     if (CurrentProgress > 60.0f) CurrentProgress = 60.0f;
+    if (CurrentProgress < 0.0f) CurrentProgress = 0.0f; // 确保不为负数
+
 
     UpdateDoorVisuals();
 
-    // 实时监测随机事件触发点
+    // 6. 实时监测随机事件触发点
     if (!bHasEventTriggered && CurrentProgress >= TriggerValue)
     {
         TriggerRandomEvent();
-        // 注意：如果 TriggerRandomEvent 触发了真正的事件，它会把 CurrentState 变成 EventTriggered
-        // 如果触发的是空事件，它会直接返回，下面的 60 门槛判定就能在同一帧无缝执行！
     }
 
-    // 达到 60 阈值，直接无缝进入自动全开阶段
+    // 7. 达到 60 阈值，直接无缝进入自动全开阶段
     if (CurrentProgress >= 60.0f)
     {
         StartAutoComplete();
@@ -149,24 +183,7 @@ void ADoor::TryPullBack()
     // 只有在进度完全为 0 或极小时允许退出交互
     if (FMath::IsNearlyZero(CurrentProgress))
     {
-        CurrentState = EDoorState::Normal;
-
-        if (CachedPC)
-        {
-            // 1. 获取玩家 Character
-            ACharacter* PlayerChar = Cast<ACharacter>(CachedPC->GetPawn());
-            if (PlayerChar)
-            {
-                // 2. 【核心】恢复玩家角色的全部键盘、鼠标、移动控制
-                PlayerChar->EnableInput(CachedPC);
-
-                // 3. 将相机平滑切回玩家角色视角
-                CachedPC->SetViewTargetWithBlend(PlayerChar, 0.5f, EViewTargetBlendFunction::VTBlend_Cubic);
-            }
-
-            // 4. 【核心】门自己立刻交出控制权，不再拦截任何后续按键
-            this->DisableInput(CachedPC);
-        }
+        ExitInteraction();
     }
 }
 
@@ -184,22 +201,16 @@ void ADoor::UpdateDoorVisuals()
         float CurrentAngle = FMath::GetMappedRangeValueClamped(FVector2D(0.0f, 60.0f), FVector2D(0.0f, MaxPushAngle), CurrentProgress);
         DoorMesh->SetRelativeRotation(FRotator(0.0f, CurrentAngle, 0.0f));
 
-        // 2. 相机轨迹：根据当前的进度比例 (0.0 - 1.0)，从自定义曲线中采样
-        if (CameraMovementCurve)
+        // 2. 替代方案：不调位置，直接调视野 FOV 
+        if (DoorCamera)
         {
-            float TimePosition = CurrentProgress / 60.0f; // 映射到 0~1 的时间轴
-            FVector CurveOffset = CameraMovementCurve->GetVectorValue(TimePosition);
+            float Alpha = CurrentProgress / 60.0f; // 0.0 ~ 1.0
 
+            // 默认 FOV 是 90（大视野），随着推门，平滑缩到 60（极度聚焦门缝）
+            // 你也可以在这里采样你的曲线：float CurveVal = CameraMovementCurve->GetVectorValue(Alpha).X; 然后用 CurveVal 来当 FOV
+            float TargetFOV = FMath::Lerp(90.0f, 60.0f, Alpha);
 
-            if (GEngine)
-            {
-                GEngine->AddOnScreenDebugMessage(1, 0.0f, FColor::Yellow,
-                    FString::Printf(TEXT("Progress: %.2f | Time: %.2f | Offset: %s"), CurrentProgress, TimePosition, *CurveOffset.ToString()));
-            }
-
-
-            // 相机相对位置 = 初始位置 + 曲线定义的偏移量
-            DoorCamera->SetRelativeLocation(InitialCameraLocation + CurveOffset);
+            DoorCamera->SetFieldOfView(TargetFOV);
         }
     }
 }
@@ -239,6 +250,28 @@ void ADoor::TriggerRandomEvent()
     // 4.不需要用 Timer 等了  直接把门踢进第四阶段（强制自动全开）
     // 这个函数会启动你之前写好的门的 Timeline，让门自动弹开，并把相机 Lerp 回复位位置
     StartAutoComplete();
+}
+
+void ADoor::ExitInteraction()
+{
+    // 1. 状态变回 Normal，代表现在没人跟这扇门交互了
+    CurrentState = EDoorState::Normal;
+
+    if (CachedPC)
+    {
+        ACharacter* PlayerChar = Cast<ACharacter>(CachedPC->GetPawn());
+        if (PlayerChar)
+        {
+            // 2. 【核心】恢复玩家角色的全部键盘、鼠标、移动控制
+            PlayerChar->EnableInput(CachedPC);
+
+            // 3. 将相机平滑切回玩家角色视角
+            CachedPC->SetViewTargetWithBlend(PlayerChar, 0.3f, EViewTargetBlendFunction::VTBlend_Cubic);
+        }
+
+        // 4. 【核心】门自己立刻交出控制权，不再拦截任何后续按键
+        this->DisableInput(CachedPC);
+    }
 }
 
 void ADoor::EndCurrentEvent()
@@ -281,7 +314,7 @@ void ADoor::HandleTimelineProgress(float Value)
 
 void ADoor::OnTimelineFinished()
 {
-   // 将状态标记为完全打开，交互彻底结束
+    // 将状态标记为完全打开，交互彻底结束
     CurrentState = EDoorState::AutoComplete;
     bIsEventActive = false;
 
@@ -292,20 +325,20 @@ void ADoor::OnTimelineFinished()
         if (PlayerChar)
         {
             // 2. 核心：完全恢复玩家角色的全部键盘移动和鼠标视角输入
-            PlayerChar->EnableInput(CachedPC); 
-            
+            PlayerChar->EnableInput(CachedPC);
+
             // 3. 核心：将摄像机从门的 DoorCamera 平滑地混成（Blend）切回玩家的角色视角
             // 这里的 0.4f 是切回来的时间，你可以改成 0.2f 让它更快、更惊悚地拉回视角
             CachedPC->SetViewTargetWithBlend(PlayerChar, 0.4f, EViewTargetBlendFunction::VTBlend_Cubic);
         }
-        
+
         // 4. 核心：门自己立刻全面交出（Disable）输入权，以后玩家按 W/S 门都绝对不再响应
         this->DisableInput(CachedPC);
     }
 
     // 停止 Tick，省下性能
     SetActorTickEnabled(false);
-    
+
     UE_LOG(LogTemp, Log, TEXT("Door: Auto Open Complete. Control returned to Character."));
 }
 

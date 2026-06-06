@@ -106,6 +106,7 @@ protected:
     // ─── 内部逻辑函数 ───
     void UpdateDoorVisuals();
     void TriggerRandomEvent();
+    void ExitInteraction();
 
     UFUNCTION(BlueprintCallable, Category = "Door|Events")
     void EndCurrentEvent(); // 事件结束时由蓝图/C++调用恢复控制
