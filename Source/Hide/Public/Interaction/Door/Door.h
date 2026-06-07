@@ -42,9 +42,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Door|Interaction")
 	void PushDoor(float AxisValue);
 
-	// 外部调用：玩家尝试退出（按下S时调用）
-	UFUNCTION(BlueprintCallable, Category = "Door|Interaction")
-	void TryPullBack();
 
 
 
