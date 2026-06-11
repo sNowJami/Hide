@@ -12,7 +12,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 
 
-// Sets default values
+// Sets default values 
 ADoor::ADoor()
 {
     // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -93,17 +93,17 @@ void ADoor::TryInteract(APlayerController* PC)
     // 随机生成 30-50 之间的触发点
     TriggerValue = FMath::FRandRange(30.0f, 50.0f);
 
-    // 【核心修复】完全剥夺玩家 Character 的控制权，而不仅仅是 DisableInput
+
     ACharacter* PlayerChar = Cast<ACharacter>(CachedPC->GetPawn());
     if (PlayerChar)
     {
         // 1. 强行清空角色的速度（瞬间刹车），防止脚步声和惯性动画被卡住
-        PlayerChar->GetCharacterMovement()->Velocity = FVector::ZeroVector;
+        PlayerChar->GetCharacterMovement()->Velocity = FVector::ZeroVector;  //后续发现SoundBug是因为蓝图的逻辑导致，  如后续出现新Bug 删掉这一条
 
         // 2. 强行停止所有移动组件的正在进行的加速度计算
-        PlayerChar->GetCharacterMovement()->StopMovementImmediately();
+        PlayerChar->GetCharacterMovement()->StopMovementImmediately();   // 以上
 
-        // 3. 【安全清空】在这两步做完、速度彻底归零之后，再切断玩家输入
+        // 3. 【安全清空】在这两步做完、速度彻底归零之后，再切断玩家输入   //以上
         PlayerChar->DisableInput(CachedPC);
     }
     // 让门本身开始允许接收输入（这样门才能在玩家断开后，单独接收 W/S 键）
@@ -132,18 +132,18 @@ void ADoor::PushDoor(float AxisValue)
     // 获取帧时间
     float DeltaTime = GetWorld()->GetDeltaSeconds();
 
-    // 【防瞬移核心保护】
-    if (DeltaTime > 0.05f) DeltaTime = 0.016f;
+    //// 【防瞬移核心保护】
+    //if (DeltaTime > 0.05f) DeltaTime = 0.016f;    //后续发现是CameraFov问题  如后续有问题则去掉注释
 
     // 计算这一帧的真实理论增量（AxisValue 为正时往前推，为负时往回拉）
     float ProgressIncrement = DeltaTime * PushSpeed * AxisValue;
 
-    // 🌟【防暴涨限速锁】
+  
     // 强制卡死：任何一帧，门板进度的单帧变化绝对不能超过 1.5，也绝不能低于 -1.5，彻底解决 FOV 或时间断层引发的闪现
     ProgressIncrement = FMath::Clamp(ProgressIncrement, -1.5f, 1.5f);
 
 
-    // ─── 🛠️ 补充核心逻辑 A：处理往回拉（S键，即 AxisValue < 0） ───
+    // ───A：处理往回拉（S键，即 AxisValue < 0） ───
     if (AxisValue < 0.0f)
     {
         // 只要在触发惊吓事件前（TriggerValue - 1.0f 之前），都允许玩家按 S 把门往回拉
@@ -172,7 +172,7 @@ void ADoor::PushDoor(float AxisValue)
             return;
         }
     }
-    // ─── 🛠️ 补充核心逻辑 B：正常按 W 往前推门（AxisValue > 0） ───
+    // ───正常按 W 往前推门（AxisValue > 0） ───
     else
     {
         // 累加正增量
