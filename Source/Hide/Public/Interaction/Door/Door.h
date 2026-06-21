@@ -108,7 +108,7 @@ protected:
     UFUNCTION(BlueprintCallable, Category = "Door|Events")
     void EndCurrentEvent(); // 事件结束时由蓝图/C++调用恢复控制
 
-    void StartAutoComplete();
+    void StartAutoComplete(); 
 
 
     // 声明惊吓事件 A，允许在蓝图里复写
