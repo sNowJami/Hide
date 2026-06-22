@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿ // Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Interaction/Door/Door.h"
@@ -8,7 +8,6 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerController.h"
 #include "Curves/CurveVector.h"
-// 【核心修复：补上运动组件头文件，消灭 GetCharacterMovement 红线】
 #include "GameFramework/CharacterMovementComponent.h"
 
 
