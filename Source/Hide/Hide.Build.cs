@@ -15,7 +15,9 @@ public class Hide : ModuleRules
 			"Engine", 
 			"InputCore",
 			"EnhancedInput",
-			"GameplayTags"});
+			"GameplayTags",
+            "NavigationSystem",
+            "GameplayTasks"});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 
